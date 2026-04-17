@@ -1,0 +1,37 @@
+version: "3.9"
+
+services:
+  redis:
+    image: redis:7.2-alpine
+    container_name: tg_bot_redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    command: redis-server --maxmemory 256mb --maxmemory-policy allkeys-lru
+    volumes:
+      - redis_data:/data
+
+  bot:
+    build: .
+    container_name: tg_bot
+    restart: unless-stopped
+    env_file: .env
+    depends_on:
+      - redis
+    command: python app/main.py
+
+  worker:
+    build: .
+    container_name: tg_bot_worker
+    restart: unless-stopped
+    env_file: .env
+    depends_on:
+      - redis
+    command: >
+      celery -A infrastructure.tasks.celery_app worker
+      --loglevel=info
+      --queues=scraping,maintenance
+      --concurrency=4
+
+volumes:
+  redis_data:

@@ -1,0 +1,26 @@
+[Unit]
+Description=Celery Worker for Telegram Bot
+After=network.target redis.service
+Wants=redis.service
+
+[Service]
+Type=simple
+User=ubuntu
+WorkingDirectory=/opt/tg_bot
+EnvironmentFile=/opt/tg_bot/.env
+Environment=PYTHONPATH=/opt/tg_bot
+ExecStart=/opt/tg_bot/venv/bin/celery \
+    -A infrastructure.tasks.celery_app worker \
+    --loglevel=info \
+    --queues=scraping,maintenance \
+    --concurrency=4 \
+    --logfile=/var/log/tg_bot/celery_worker.log
+Restart=always
+RestartSec=10
+
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=tg_bot_worker
+
+[Install]
+WantedBy=multi-user.target

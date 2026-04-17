@@ -1,0 +1,23 @@
+[Unit]
+Description=Telegram Bot Service
+After=network.target redis.service
+Wants=redis.service
+
+[Service]
+Type=simple
+User=ubuntu
+WorkingDirectory=/opt/tg_bot
+EnvironmentFile=/opt/tg_bot/.env
+Environment=PYTHONPATH=/opt/tg_bot
+ExecStart=/opt/tg_bot/venv/bin/python app/main.py
+Restart=always
+RestartSec=5
+StartLimitIntervalSec=60
+StartLimitBurst=5
+
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=tg_bot
+
+[Install]
+WantedBy=multi-user.target
